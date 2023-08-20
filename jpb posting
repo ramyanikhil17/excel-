@@ -1,0 +1,52 @@
+import pandas as pd
+import json
+import requests
+import openpyxl
+
+api_url = "http://127.0.0.1:5000/data"
+locations = [
+    "Los Angeles",
+    "New York",
+    "San Francisco",
+    "Washington DC",
+    "Seattle",
+    "Austin",
+    "Detroit"
+]
+
+def get_job_data():
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()  # Raise an exception for non-200 response
+        return response.json()
+
+    except requests.RequestException as e:
+        print("Error:", e)
+        return None
+
+def create_excel_from_data(data):
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Job Postings"
+
+    sheet["A1"] = "Location"
+    sheet["B1"] = "Number of Jobs"
+
+    row = 2  # Start from the second row
+
+    for location in locations:
+        jobs_count = data.get(location, 0)  # Get jobs count for the location, default to 0 if not found
+        sheet[f"A{row}"] = location
+        sheet[f"B{row}"] = jobs_count
+        row += 1
+
+    workbook.save("job_postings.xlsx")
+    print("Excel spreadsheet 'job_postings.xlsx' created successfully.")
+
+# Get job data from the API
+job_data = get_job_data()
+
+if job_data is not None:
+    create_excel_from_data(job_data)
+else:
+    print("Unable to fetch job data.")
